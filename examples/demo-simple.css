@@ -1,0 +1,28 @@
+:root{
+    /* declaration of some global variables */
+    --primaryColor : #F2A2BB;
+    --textSize : 12;
+    --rotation : 20deg;
+}
+
+body{
+    /* Body background color will be specifed by the CSS variable --primaryColor */
+    background-color: var(--primaryColor);
+    /* Some extra styling ... */
+    text-align:center;
+    margin: 0;
+    height: 100%;
+    transition: all .5s;
+    overflow:hidden;
+}
+
+div{
+	/* Trick : Multiplying * 1px the value of th var, will add the needd "px" sufix */
+    font-size: calc( var(--textSize) * 1px );
+    /* Some extra styling ... */
+	position:relative;
+    top:50%;
+    transition: all .5s;
+    transform: rotate(var(--rotation) );
+
+}

@@ -1,0 +1,55 @@
+{
+    "name": "@democrance/css-global-properties",
+    "version": "0.1.0",
+    "description": "Beautiful alternative for console logging",
+    "keywords": [
+        "css vars",
+        "css variables",
+        "css properties",
+        "css global-properties"
+    ],
+    "license": "MIT",
+    "author": "Daniil Chumachenko <daniil4udo@gmail.com>",
+    "repository": "daniil4udo/css-global-properties",
+    "type": "module",
+    "exports": {
+        ".": {
+            "require": "./dist/index.cjs",
+            "import": "./dist/index.mjs",
+            "types": "./dist/index.d.ts"
+        }
+    },
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rm -rf dist && unbuild",
+        "lint": "eslint --ext .vue,.ts,.js .",
+        "test": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "devDependencies": {
+        "@democrance/eslint-config": "^0.4.0",
+        "@types/node": "^16.18.8",
+        "@vitest/coverage-c8": "^0.25.8",
+        "@vue/tsconfig": "^0.1.3",
+        "eslint": "^8.29.0",
+        "typescript": "^4.9.4",
+        "unbuild": "^1.0.2",
+        "vitest": "^0.25.8"
+    },
+    "packageManager": "pnpm@7.18.1",
+    "engines": {
+        "node": ">=14"
+    },
+    "pnpm": {
+        "overrides": {
+            "rollup": "^3.0.0"
+        }
+    },
+    "dependencies": {
+        "@democrance/utils": "^0.5.1"
+    }
+}

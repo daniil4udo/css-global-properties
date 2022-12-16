@@ -5,118 +5,70 @@
 // Prefix as well
 // https://www.npmjs.com/package/postcss-variables-prefixer-plugin
 
-import { debounce, defaultsDeep } from '@democrance/utils'
+import type { IOptions } from './types'
 
-export type CSSPixelValue = '0' | `${string}px`
-export type CSSLengthValue = '0' | `${string}${ | '%'
-| 'ch'
-| 'cm'
-| 'em'
-| 'ex'
-| 'in'
-| 'mm'
-| 'pc'
-| 'pt'
-| 'px'
-| 'rem'
-| 'vh'
-| 'vmax'
-| 'vmin'
-| 'vw'
-  }`
-export type CSSAngleValue = `${string}${ | 'deg'
-| 'grad'
-| 'rad'
-| 'turn'
-  }`
-export type CSSHexColor = `#${string}`
+import { defaultsDeep } from '@democrance/utils'
 
-let __identifierCounter__ = 0
+import { initObserver } from './initObserver'
+import { createNormalizer } from './styleHelpers'
 
-export interface IOptions {
-    id?: number
-    filter?: string
-    autoprefix?: boolean
-    normalize?: (name: string) => string
-    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
-}
+let id = 0
 
 // https://github.com/colxi/css-global-variables
-export function CSSGlobalVariables(configObj: IOptions = {}) {
+export function CSSGlobalProperties(conf: IOptions = {}) {
     if (typeof window === 'undefined')
         return
     // Usage of 'new' keyword is mandatory
-    // if (!new.target) throw new Error('Calling CSSGlobalVariables constructor without "new" is forbidden');
+    // if (!new.target) throw new Error('Calling CSSGlobalProperties constructor without "new" is forbidden');
 
     // Validate Config Object type and property values types
-    if (Object.prototype.toString.call(configObj) !== '[object Object]' && Object.getPrototypeOf(configObj) !== Object.getPrototypeOf({}))
-        throw new Error('CSSGlobalVariables constructor expects a config Object as first argument')
+    if (Object.prototype.toString.call(conf) !== '[object Object]' && Object.getPrototypeOf(conf) !== Object.getPrototypeOf({}))
+        throw new Error('[CSSGlobalProperties] - constructor expects a config Object as first argument')
 
-    if ('normalize' in configObj && typeof configObj.normalize !== 'function')
-        throw new Error('Config property "normalize" must be a function')
+    if ('normalize' in conf && typeof conf.normalize !== 'function')
+        throw new Error('[CSSGlobalProperties] - Config property "normalize" must be a function')
 
-    if ('autoprefix' in configObj && typeof configObj.autoprefix !== 'boolean')
-        throw new Error('Config property "autoprefix" must be a boolean')
+    if ('autoprefix' in conf && typeof conf.autoprefix !== 'boolean')
+        throw new Error('[CSSGlobalProperties] - Config property "autoprefix" must be a boolean')
 
-    if ('filter' in configObj) {
-        if (typeof configObj.filter !== 'string') {
-            throw new TypeError('Config property "filter" must be a string')
+    if ('filter' in conf) {
+        if (typeof conf.filter !== 'string') {
+            throw new TypeError('[CSSGlobalProperties] - Config property "filter" must be a string')
         }
         else {
             try {
-                document.querySelectorAll(configObj.filter)
+                document.querySelectorAll(conf.filter)
             }
             catch (e) {
-                throw new Error(`Provided "filter" is an invalid selector ("${configObj.filter}")`)
+                throw new Error(`[CSSGlobalProperties] - Provided "filter" is an invalid selector ("${conf.filter}")`)
             }
         }
     }
 
-    // __config__  : Object containing the instance configuration.
+    // globalConfigs  : Object containing the instance configuration.
     // Declare config properties and default values...
-    const __config__: IOptions = defaultsDeep(configObj, {
+    const globalConfigs: IOptions = defaultsDeep(conf, {
         autoprefix: true,
         normalize: null,
+
         Logger: console,
+
+        ignoreAttrTag: 'css-global-vars-ignore',
+        idAttrTag: 'css-global-vars-id',
+
+        // document.documentElement
+        selector: ':root',
     })
 
     // Generate and assign instance ID
-    __identifierCounter__++
-    __config__.id = __identifierCounter__
+    id++
+    globalConfigs.id = id
 
-    // __varsCache__ : Contains (internally) the CSS variables and values.
-    const __varsCache__: Record<string, string> = {}
-    const __event__ = new CustomEvent('stylesUpdated', { detail: __varsCache__ })
+    // varsCacheMap : Contains (internally) the CSS variables and values.
+    const varsCacheMap = new Map()
+    const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: varsCacheMap })
 
-    /**
-     *
-     * normalizeVariableName()  Forces name to be a String, and attach the
-     * mandatory '--' prefix when autoprefixer is Enabled
-     *
-     * @param  {[String]} name  Name of thw requested variable
-     *
-     * @return {[String]}
-     *
-     */
-    const normalizeVariableName = useMemoize((name: string | symbol) => {
-        name = name.toString()
-
-        // if normalize was provided execute it
-        if (__config__.normalize)
-            name = __config__.normalize(name)
-
-        // If CSS variable name does not start with '--', prefix it, when __config__.autoprefix=true,
-        // or trigger an Error when not.
-        if (name.substring(0, 2) !== '--') {
-            if (__config__.autoprefix)
-                name = `--${name}`
-
-            else
-                throw new Error('Invalid CSS Variable name. Name must start with "--" (autoprefix=false)')
-        }
-
-        return name
-    })
+    const normalizeVariableName = createNormalizer(globalConfigs)
 
     /**
      *
@@ -131,25 +83,28 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
     function updateVarsCache() {
         // iterate all document stylesheets
         const styleSheets = Array.from(document.styleSheets)
+
         const styleSheetsLen = styleSheets.length
-        for (let ss = 0; ss < styleSheetsLen; ss++) {
-            const styleSheet = styleSheets[ss]
-            if (!(styleSheet.ownerNode instanceof Element))
+        for (let i = 0; i < styleSheetsLen; i++) {
+            const styleSheet = styleSheets[i]
+
+            // This is usually an HTML <link> or <style> element, but can also return a processing instruction node in the case of <?xml-stylesheet ?>.
+            if (styleSheet.ownerNode instanceof ProcessingInstruction)
                 continue
 
             // if element has the ignore directive, ignore it and continue
-            if (styleSheet.ownerNode.getAttribute('css-global-vars-ignore'))
+            if (styleSheet.ownerNode.getAttribute(globalConfigs.ignoreAttrTag))
                 continue
 
             // if filters have been provided to constructor...
-            if (__config__.filter) {
+            if (globalConfigs.filter) {
                 // get all elements that match the filter...
-                const elements = document.querySelectorAll(__config__.filter)
+                const elements = Array.from(document.querySelectorAll(globalConfigs.filter))
                 let isMember = false
 
                 // iterate all selector resulting collection
-                const keysLen = Object.keys(elements).length
-                for (let i = 0; i < keysLen; i++) {
+                const elementsLen = Object.keys(elements).length
+                for (let i = 0; i < elementsLen; i++) {
                     // if current element matches the current stylesheet,
                     // set flag to true and finish iteration
                     if (elements[i] === styleSheet.ownerNode) {
@@ -166,15 +121,15 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
             let abort = false
             try {
                 // eslint-disable-next-line no-unused-expressions
-                styleSheet.rules || styleSheet.cssRules
+                styleSheet.cssRules
             }
             catch (e) {
-                if (!styleSheet.ownerNode.hasAttribute('css-global-vars-ignore')) {
-                    styleSheet.ownerNode.setAttribute('css-global-vars-ignore', 'true')
-                    __config__.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalVariables. Check the documentation for instructions to prevent this issue.', e)
+                if (!styleSheet.ownerNode.hasAttribute(globalConfigs.ignoreAttrTag)) {
+                    styleSheet.ownerNode.setAttribute(globalConfigs.ignoreAttrTag, 'true')
+                    globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', e)
                 }
                 else {
-                    __config__.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', e)
+                    globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', e)
                 }
                 abort = true
             }
@@ -184,44 +139,49 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
 
             // if Style element has been previously analyzed ignore it;
             // if not, mark element as analyzed to prevent future analysis
-            const ids = styleSheet.ownerNode.getAttribute('css-global-vars-id')
+            const ids = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag)
 
-            if (String(ids).split(',').includes(String(__config__.id)))
+            if (String(ids).split(',').includes(String(globalConfigs.id)))
                 continue
 
             // not cached yet!
-            let value: number | string = styleSheet.ownerNode.getAttribute('css-global-vars-id')
+            let value: string = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag)
             // check if is null or empty (cross-browser solution),
             // and attach the new instance id
-            if (value === null || value === '')
-                value = __config__.id
+            if (value == null || value === '')
+                value = `${globalConfigs.id}`
 
             else
-                value += `,${__config__.id}`
+                value += `,${globalConfigs.id}`
 
             // set the new value to the object
-            styleSheet.ownerNode.setAttribute('css-global-vars-id', String(value))
+            styleSheet.ownerNode.setAttribute(globalConfigs.idAttrTag, String(value))
 
             // iterate each CSS rule...
-            const rules = Array.from(styleSheet.rules || styleSheet.cssRules)
+            const rules = Array.from(styleSheet.cssRules)
+
             const rulesLen = rules.length
             for (let r = 0; r < rulesLen; r++) {
-                const cssRule = rules[r] as CSSStyleRule
+                const cssRule = rules[r]
 
-                // select all elements in the scope
-                // if (__scopes__[cssRule.selectorText]) {
-                if (cssRule.selectorText === ':root') {
-                    let css = cssRule.cssText.split('{')
-                    css = css[1].replace('}', '').split(';')
+                // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
+                if (cssRule instanceof CSSStyleRule) {
+                    // select all elements in the scope
+                    // if (__scopes__[cssRule.selectorText]) {
+                    if (cssRule.selectorText === globalConfigs.selector) {
+                        let css = cssRule.cssText.split('{')
+                        css = css[1].replace('}', '').split(';')
 
-                    const cssLen = css.length
-                    // iterate each :root CSS property
-                    for (let i = 0; i < cssLen; i++) {
-                        const prop = css[i].split(':')
+                        const cssLen = css.length
+                        // iterate each :root CSS property
+                        for (let i = 0; i < cssLen; i++) {
+                            const prop = css[i].split(':')
 
-                        // if is a CSS variable property, insert in the cache
-                        if (prop.length === 2 && prop[0].indexOf('--') === 1)
-                            __varsCache__[prop[0].trim()] = prop[1].trim()
+                            // if is a CSS variable property, insert in the cache
+                            if (prop.length === 2 && prop[0].indexOf('--') === 1)
+                                // varsCacheMap[prop[0].trim()] = prop[1].trim()
+                                varsCacheMap.set(prop[0].trim(), prop[1].trim())
+                        }
                     }
                 }
             }
@@ -230,82 +190,25 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
         // After collecting all the variables definitions, check their computed
         // values, consulting the :root element inline style definitions,
         // and assigning those values to the variables, in cache
-        for (const p in __varsCache__) {
-            if (p in __varsCache__)
-                __varsCache__[p] = window.getComputedStyle(document.documentElement, null).getPropertyValue(p).trim()
-        }
+        varsCacheMap.forEach((value, p) => {
+            const getPropertyValue = window
+                .getComputedStyle(document.documentElement, null)
+                .getPropertyValue(p).trim()
+
+            varsCacheMap.set(p, getPropertyValue)
+        })
 
         return true
     }
 
-    /**
-     *
-     * Create a mutation observer
-     * When new styles are attached to the DOM (Style or Link element)
-     * will perform an update of the document CSS variables
-     *
-     * @param target
-     * @param options
-     *
-     * @returns {[MutationObserver]}
-     *
-     */
-    function initObserver(target: Node = document.documentElement, options: MutationObserverInit = {}) {
-        const observer = new MutationObserver(debounce((mutations) => {
-            let update = false
-            const mutationsRecordLen = mutations.length
-            for (let m = 0; m < mutationsRecordLen; m++) {
-                const mutation = mutations[m]
-
-                if (mutation.type === 'childList') {
-                    let len = mutation.addedNodes.length
-                    for (let i = 0; i < len; i++) {
-                        // TODO: find better way then type casting as Element
-                        if ((mutation.addedNodes[i] as HTMLElement).tagName === 'STYLE' || (mutation.addedNodes[i] as HTMLElement).tagName === 'LINK') {
-                            update = true
-                            break
-                        }
-                    }
-
-                    // if update already
-                    // no need to check deleted nodes, just trigger cache update
-                    if (update)
-                        break
-
-                    len = mutation.removedNodes.length
-                    for (let i = 0; i < len; i++) {
-                        if ((mutation.removedNodes[i] as HTMLElement).tagName === 'STYLE' || (mutation.removedNodes[i] as HTMLElement).tagName === 'LINK') {
-                            update = true
-                            break
-                        }
-                    }
-                }
-            }
-
-            if (update) {
-                updateVarsCache()
-                window.dispatchEvent(__event__)
-                // update needs to be scheduled to guarantee that the new styles
-                // are visible through the document.styleSheets API
-                // setTimeout(() => {
-                //     updateVarsCache();
-                //     window.dispatchEvent(__event__);
-                // }, 200);
-            }
-        }, 23))
-
-        options = defaultsDeep(options, {
-            attributes: false,
-            childList: true,
-            characterData: true,
-            subtree: true,
-        })
-
-        return (observer.observe(target, options), observer)
-    }
-
     // Initialize the observer. Set the target and the config
-    initObserver()
+    initObserver({
+        options: conf.mutationObserveOptions,
+        onUpdate: () => {
+            updateVarsCache()
+            window.dispatchEvent(stylesUpdatedEvent)
+        },
+    })
 
     // analyze the document style elements to generate
     // the collection of CSS variables, and return the proxy object
@@ -320,7 +223,7 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
      * @type {[Proxy]}
      *
      */
-    return new Proxy(__varsCache__, {
+    return new Proxy(varsCacheMap, {
         get(target, name) {
             // check if there is any new CSS declarations to be considered
             // before returning any
@@ -331,9 +234,9 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
         set(target, name, value) {
             // updateVarsCache();
             const normalizedName = normalizeVariableName(name)
-            value = String(value)
+
             // set the variable value
-            document.documentElement.style.setProperty(normalizedName, value)
+            document.documentElement.style.setProperty(normalizedName, String(value))
 
             // update the cache object
             return Reflect.set(target, name, value)
@@ -355,10 +258,12 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
             // updateVarsCache();
             const normalizedName = normalizeVariableName(name)
 
-            if (isPlainObject(attr) && has(attr, 'value')) {
+            if (attr?.value != null) {
                 const value = attr.value.toString()
+
                 // set the CSS variable value
                 document.documentElement.style.setProperty(normalizedName, value)
+
                 // update the cache
                 Reflect.set(target, normalizedName, value)
             }
@@ -377,6 +282,6 @@ export function CSSGlobalVariables(configObj: IOptions = {}) {
     })
 }
 
-export const cssVars = CSSGlobalVariables({
-    normalize: name => name.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`),
+export const cssVars = CSSGlobalProperties({
+    // normalize: name => name.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase(),
 })

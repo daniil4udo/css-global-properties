@@ -1,5 +1,5 @@
 {
-	"extends": "@vue/tsconfig/tsconfig.web.json",
+	"extends": "./node_modules/@vue/tsconfig/tsconfig.web.json",
     "include": [
         "env.d.ts",
         "./lib/*.ts"

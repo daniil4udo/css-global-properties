@@ -4,7 +4,7 @@ export function createRootStyle({ media = 'all', id = undefined } = {}) {
     // Create the <style> tag
     const style = document.createElement('style')
 
-    style.rel = 'stylesheet'
+    // style.rel = 'stylesheet'
     style.media = media
     style.id = id ?? window.crypto.randomUUID()
 

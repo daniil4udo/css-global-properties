@@ -10,7 +10,7 @@ import type { IOptions } from './types'
 import { defaultsDeep } from '@democrance/utils'
 
 import { initObserver } from './initObserver'
-import { createNormalizer } from './styleHelpers'
+import { createNormalizer, cssRulesEntries, getAttribute, testCrossOrigin } from './styleHelpers'
 
 let id = 0
 
@@ -118,24 +118,17 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
                     return false
             }
 
-            let abort = false
-            try {
-                // eslint-disable-next-line no-unused-expressions
-                styleSheet.cssRules
-            }
-            catch (e) {
-                if (!styleSheet.ownerNode.hasAttribute(globalConfigs.ignoreAttrTag)) {
-                    styleSheet.ownerNode.setAttribute(globalConfigs.ignoreAttrTag, 'true')
-                    globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', e)
+            const abort = testCrossOrigin(styleSheet, globalConfigs)
+            if (abort) {
+                if (typeof abort !== 'boolean') {
+                    if ((abort.reason === 'cors'))
+                        globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', abort.error)
+                    else
+                        globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', abort.error)
                 }
-                else {
-                    globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', e)
-                }
-                abort = true
-            }
 
-            if (abort)
                 break
+            }
 
             // if Style element has been previously analyzed ignore it;
             // if not, mark element as analyzed to prevent future analysis
@@ -145,46 +138,16 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
                 continue
 
             // not cached yet!
-            let value: string = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag)
-            // check if is null or empty (cross-browser solution),
-            // and attach the new instance id
-            if (value == null || value === '')
-                value = `${globalConfigs.id}`
-
-            else
-                value += `,${globalConfigs.id}`
-
             // set the new value to the object
+            const value = getAttribute(styleSheet.ownerNode, globalConfigs)
             styleSheet.ownerNode.setAttribute(globalConfigs.idAttrTag, String(value))
 
             // iterate each CSS rule...
             const rules = Array.from(styleSheet.cssRules)
-
-            const rulesLen = rules.length
-            for (let r = 0; r < rulesLen; r++) {
-                const cssRule = rules[r]
-
-                // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
-                if (cssRule instanceof CSSStyleRule) {
-                    // select all elements in the scope
-                    // if (__scopes__[cssRule.selectorText]) {
-                    if (cssRule.selectorText === globalConfigs.selector) {
-                        let css = cssRule.cssText.split('{')
-                        css = css[1].replace('}', '').split(';')
-
-                        const cssLen = css.length
-                        // iterate each :root CSS property
-                        for (let i = 0; i < cssLen; i++) {
-                            const prop = css[i].split(':')
-
-                            // if is a CSS variable property, insert in the cache
-                            if (prop.length === 2 && prop[0].indexOf('--') === 1)
-                                // varsCacheMap[prop[0].trim()] = prop[1].trim()
-                                varsCacheMap.set(prop[0].trim(), prop[1].trim())
-                        }
-                    }
-                }
-            }
+            cssRulesEntries(rules, globalConfigs)
+                .forEach((prop) => {
+                    varsCacheMap.set(prop[0], prop[1])
+                })
         }
 
         // After collecting all the variables definitions, check their computed

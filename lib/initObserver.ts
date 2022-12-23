@@ -2,7 +2,7 @@ import type { InitObserver } from './types'
 
 import { defaultsDeep } from '@democrance/utils'
 
-import { isStyleOrLinkNode } from './styleHelpers'
+import { isAllowedTagName } from './styleHelpers'
 /**
  *
  * Create a mutation observer
@@ -33,7 +33,7 @@ export function initObserver({ target = document.documentElement, options = {}, 
             if (mutation.type === 'childList') {
                 const addedNodesLen = mutation.addedNodes.length
                 for (let i = 0; i < addedNodesLen; i++) {
-                    if (isStyleOrLinkNode(mutation.addedNodes[i])) {
+                    if (isAllowedTagName(mutation.addedNodes[i])) {
                         update = true
                         break
                     }
@@ -46,7 +46,7 @@ export function initObserver({ target = document.documentElement, options = {}, 
 
                 const removedNodesLen = mutation.removedNodes.length
                 for (let i = 0; i < removedNodesLen; i++) {
-                    if (isStyleOrLinkNode(mutation.removedNodes[i])) {
+                    if (isAllowedTagName(mutation.removedNodes[i])) {
                         update = true
                         break
                     }

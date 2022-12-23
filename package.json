@@ -1,12 +1,13 @@
 {
-    "name": "@democrance/css-global-properties",
+    "name": "css-global-properties",
     "version": "0.1.0",
-    "description": "Beautiful alternative for console logging",
+    "description": "Framework agnostic management for CSS properties (variables)",
     "keywords": [
+        "css",
         "css vars",
         "css variables",
         "css properties",
-        "css global-properties"
+        "css global properties"
     ],
     "repository": "daniil4udo/css-global-properties",
     "license": "MIT",
@@ -25,7 +26,7 @@
         "dist"
     ],
     "scripts": {
-        "build": "rm -rf dist && unbuild",
+        "build": "rimraf dist && unbuild",
         "lint": "eslint --ext .vue,.ts,.js .",
         "test": "vitest",
         "test:coverage": "vitest run --coverage"
@@ -46,10 +47,5 @@
     "packageManager": "pnpm@7.18.1",
     "engines": {
         "node": ">=14"
-    },
-    "pnpm": {
-        "overrides": {
-            "rollup": "^3.0.0"
-        }
     }
 }

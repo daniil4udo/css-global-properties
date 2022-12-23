@@ -3,18 +3,7 @@ import type { InitObserver } from './types'
 import { defaultsDeep } from '@democrance/utils'
 
 import { isAllowedTagName } from './styleHelpers'
-/**
- *
- * Create a mutation observer
- * When new styles are attached to the DOM (Style or Link element)
- * will perform an update of the document CSS variables
- *
- * @param target
- * @param options
- *
- * @returns {[MutationObserver]}
- *
- */
+
 const DEFAULT_OPTIONS: MutationObserverInit = {
     attributes: false,
     childList: true,
@@ -22,8 +11,19 @@ const DEFAULT_OPTIONS: MutationObserverInit = {
     subtree: true,
 }
 
+/**
+ *
+ * Create a mutation observer
+ * When new styles are attached to the DOM (Style or Link element)
+ * will perform an update of the document CSS variables
+ *
+ * @param {InitObserver} target
+ *
+ * @returns {MutationObserver}
+ *
+ */
 export function initObserver({ target = document.documentElement, options = {}, onUpdate }: InitObserver = {}) {
-    const mutationCallback = (mutations) => {
+    const mutationCallback: MutationCallback = (mutations) => {
         let update = false
 
         const mutationsRecordLen = mutations.length

@@ -1,5 +1,14 @@
 import type { IOptions } from './types'
 
+/**
+ * Creates HTMLStyleElement with given parameters
+ *
+ * @param {Object} styleProperties
+ * @param {string} styleProperties.media - Sets the media type.
+ * @param {string} styleProperties.id - Sets the value of element's id content attribute.
+
+ * @returns {HTMLStyleElement}
+ */
 export function createRootStyle({ media = 'all', id = undefined } = {}) {
     // Create the <style> tag
     const style = document.createElement('style')
@@ -17,16 +26,17 @@ export function createRootStyle({ media = 'all', id = undefined } = {}) {
     return style
 }
 
-/* Safely Applying Rules
-Since browser support for insertRule isn't as global, it's best to create a wrapping function to do the rule application.  Here's a quick and dirty method: */
 export function addCSSRule(sheet: HTMLStyleElement, selector = ':root', rules: string, index = 0) {
     if ('insertRule' in sheet.sheet)
         sheet.sheet.insertRule(`${selector} { ${rules} } `, index)
-
-    else if ('addRule' in sheet.sheet)
-        sheet.sheet.addRule(selector, rules, index)
 }
 
+/**
+ *
+ * @param {Node} node - Node is an interface from which a number of DOM API object types inherit.
+ * @param {[ 'STYLE', 'LINK' ]} allowedTagNames - Names of the allowed tags
+ * @returns {boolean}
+ */
 export function isAllowedTagName(node: Node, allowedTagNames = [ 'STYLE', 'LINK' ]) {
     return 'tagName' in node
         && allowedTagNames
@@ -34,6 +44,16 @@ export function isAllowedTagName(node: Node, allowedTagNames = [ 'STYLE', 'LINK'
             .includes(node.tagName as string) // (node.tagName === 'STYLE' || node.tagName === 'LINK')
 }
 
+/**
+ *
+ * Safely Applying Rules
+ * Since browser support for insertRule isn't as global, it's best to create a wrapping function to do the rule application.
+ *
+ * @param {CSSStyleSheet} styleSheet
+ * @param {IOptions} globalConfigs
+ *
+ * @returns {boolean|{ reason?: 'cors', error: Error }}
+ */
 export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag }: IOptions): boolean | { reason?: 'cors', error: Error } {
     try {
         // eslint-disable-next-line no-unused-expressions
@@ -57,6 +77,13 @@ export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag }: IO
     }
 }
 
+/**
+ *
+ * @param {CSSRule[]} rules
+ * @param {IOptions} globalConfigs
+ *
+ * @returns {[ string, string ][]} CSS Rule entries
+ */
 export function cssRulesEntries(rules: CSSRule[], { selector }: IOptions) {
     const propsEntries: [ string, string ][] = []
 
@@ -93,6 +120,13 @@ export function cssRulesEntries(rules: CSSRule[], { selector }: IOptions) {
     return propsEntries
 }
 
+/**
+ *
+ * @param {Element} node
+ * @param {IOptions} globalConfigs
+ *
+ * @returns {string} Node attribute or concatenated list of attributes
+ */
 export function getAttribute(node: Element, { id, idAttrTag }: IOptions) {
     let value: string = node.getAttribute(idAttrTag)
     // check if is null or empty (cross-browser solution),
@@ -109,10 +143,9 @@ export function getAttribute(node: Element, { id, idAttrTag }: IOptions) {
 * normalizeVariableName()  Forces name to be a String, and attach the
 * mandatory '--' prefix when autoprefixer is Enabled
 *
-* @param  {[String]} name  Name of thw requested variable
-*
-* @return {[String]}
-*
+* @param  {IOptions} normalizerOptions  Name of the requested variable
+
+* @return {Function} - Creates normalizer function base on givent options
 */
 export function createNormalizer({ normalize, autoprefix }: IOptions) {
     const cache = new Map()

@@ -182,7 +182,7 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
      * variables and their values. Provides bound methods for live getting and
      * setting of the variables and values.
      *
-     * @type {[Proxy]}
+     * @type {Proxy}
      *
      */
     return new Proxy(varsCacheMap, {

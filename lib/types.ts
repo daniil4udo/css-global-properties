@@ -21,22 +21,22 @@ export type CSSAngleValue = string | 'deg' | 'grad' | 'rad' | 'turn'
 export type CSSHexColor = `#${string}`
 
 export interface IOptions {
-    id?: number
-    filter?: string
-    autoprefix?: boolean
-    normalize?: (name: string) => string
-    mutationObserveOptions?: MutationObserverInit
+    id?: number;
+    filter?: string;
+    autoprefix?: boolean;
+    normalize?: (name: string) => string;
+    mutationObserveOptions?: MutationObserverInit;
 
-    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
+    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>;
 
-    ignoreAttrTag?: string
-    idAttrTag?: string
+    ignoreAttrTag?: string;
+    idAttrTag?: string;
 
-    selector?: string
+    selector?: string;
 }
 
 export interface InitObserver {
-    target?: Node
-    options?: MutationObserverInit
-    onUpdate?: () => void
+    target?: Node;
+    options?: MutationObserverInit;
+    onUpdate?: () => void;
 }

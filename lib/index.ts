@@ -61,8 +61,7 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
     })
 
     // Generate and assign instance ID
-    id++
-    globalConfigs.id = id
+    globalConfigs.id = ++id
 
     // varsCacheMap : Contains (internally) the CSS variables and values.
     const varsCacheMap = new Map()

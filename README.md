@@ -6,14 +6,14 @@
 CSSGlobalProperties provides a natural interface for fast manipulation of **GLOBAL [CSS Variables/Custom Properties](https://www.w3.org/TR/css-variables-1/)** (those declared with a `:root` selector), simplifying template's tasks, and manipulation of general CSS styles in javascript.
 
 ```javascript
-import { CSSGlobalProperties } from '@democrance/css-global-properties';
+import { CSSGlobalProperties } from 'css-global-properties';
 
 // set the CSS global variable --myColor value to "green"
 let cssVar = CSSGlobalProperties();
 cssVar.myColor = "green";
 ```
 
-Demo: [See it in action](https://colxi.github.io/css-global-properties/examples/demo-simple.html)
+Demo: [See it in action](https://daniil4udo.github.io/css-global-properties/examples/demo-simple.html)
 
 # Syntax
 
@@ -42,10 +42,10 @@ The CSSGlobalProperties() Constructor returns a `Proxy Object` containing a **li
 
 You can choose between any of the following available distribution channels:
 
-* **GIT**: Clone the repository locally using git (or download the latest release [here](https://github.com/colxi/css-global-properties/releases/latest))
+* **GIT**: Clone the repository locally using git (or download the latest release [here](https://github.com/daniil4udo/css-global-properties/releases/latest))
 
  ```bash
- git clone https://github.com/colxi/css-global-properties.git
+ git clone https://github.com/daniil4udo/css-global-properties.git
 ```
 
 * **NPM**: Install it using npm and import it.
@@ -57,7 +57,7 @@ npm install css-global-properties -s
 * **CDN**: Include the script in your HTML header (`window.CSSGlobalProperties` will be created).
 
  ```html
-<script src="https://colxi.info/css-global-properties/src/main.js"></script>
+<script src="https://daniil4udo.info/css-global-properties/src/main.js"></script>
 ```
 
 # Usage
@@ -67,7 +67,7 @@ The `Constructor` returns a `Proxy Object` and any regular Object operation can 
 **Import and Construct**:
 
 ```javascript
-import { CSSGlobalProperties } from '@democrance/css-global-properties';
+import { CSSGlobalProperties } from 'css-global-properties';
 let cssVar = CSSGlobalProperties();
 ```
 

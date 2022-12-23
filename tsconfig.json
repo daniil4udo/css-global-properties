@@ -12,8 +12,8 @@
     "compilerOptions": {
         "baseUrl": ".",
         "outDir": "dist",
-        "target": "ESNext",
-        "module": "ESNext",
+        "target": "ES2015",
+        "module": "ES2015",
         "strict": false,
         "declaration": true,
         "pretty": true,

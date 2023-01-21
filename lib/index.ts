@@ -10,6 +10,7 @@ import type { IOptions } from './types'
 import { defaultsDeep } from '@democrance/utils'
 
 import { initObserver } from './initObserver'
+import { query } from './query'
 import { createNormalizer, cssRulesEntries, getAttribute, testCrossOrigin } from './styleHelpers'
 
 let id = 0
@@ -37,7 +38,7 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
         }
         else {
             try {
-                document.querySelectorAll(conf.filter)
+                query(conf.filter)
             }
             catch (e) {
                 throw new Error(`[CSSGlobalProperties] - Provided "filter" is an invalid selector ("${conf.filter}")`)

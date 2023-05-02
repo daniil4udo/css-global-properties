@@ -1,5 +1,5 @@
 {
-	"extends": "./node_modules/@vue/tsconfig/tsconfig.web.json",
+	"extends": "@vue/tsconfig/tsconfig.dom.json",
     "include": [
         "env.d.ts",
         "./lib/*.ts"
@@ -20,7 +20,6 @@
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
         "importHelpers": true,
-        "importsNotUsedAsValues": "error",
         "isolatedModules": true,
         "skipLibCheck": true
     },

@@ -1,15 +1,15 @@
-import type { InitObserver } from './types'
+import type { InitObserver } from './types';
 
-import { defaultsDeep } from '@democrance/utils'
+import { defaultsDeep } from '@democrance/utils';
 
-import { isAllowedTagName } from './styleHelpers'
+import { isAllowedTagName } from './styleHelpers';
 
 const DEFAULT_OPTIONS: MutationObserverInit = {
     attributes: false,
     childList: true,
     characterData: true,
     subtree: true,
-}
+};
 
 /**
  *
@@ -23,32 +23,32 @@ const DEFAULT_OPTIONS: MutationObserverInit = {
  *
  */
 export function initObserver({ target = document.documentElement, options = {}, onUpdate }: InitObserver = {}) {
-    const mutationCallback: MutationCallback = (mutations) => {
-        let update = false
+    const mutationCallback: MutationCallback = mutations => {
+        let update = false;
 
-        const mutationsRecordLen = mutations.length
+        const mutationsRecordLen = mutations.length;
         for (let m = 0; m < mutationsRecordLen; m++) {
-            const mutation = mutations[m]
+            const mutation = mutations[m];
 
             if (mutation.type === 'childList') {
-                const addedNodesLen = mutation.addedNodes.length
+                const addedNodesLen = mutation.addedNodes.length;
                 for (let i = 0; i < addedNodesLen; i++) {
                     if (isAllowedTagName(mutation.addedNodes[i])) {
-                        update = true
-                        break
+                        update = true;
+                        break;
                     }
                 }
 
                 // if update already
                 // no need to check deleted nodes, just trigger cache update
                 if (update)
-                    break
+                    break;
 
-                const removedNodesLen = mutation.removedNodes.length
+                const removedNodesLen = mutation.removedNodes.length;
                 for (let i = 0; i < removedNodesLen; i++) {
                     if (isAllowedTagName(mutation.removedNodes[i])) {
-                        update = true
-                        break
+                        update = true;
+                        break;
                     }
                 }
             }
@@ -63,15 +63,15 @@ export function initObserver({ target = document.documentElement, options = {}, 
             // }, 200);
             if (typeof onUpdate === 'function') {
                 requestAnimationFrame(() => {
-                    onUpdate()
-                })
+                    onUpdate();
+                });
             }
         }
-    }
-    const defaultOptions = defaultsDeep(options ?? {}, DEFAULT_OPTIONS)
-    const observer = new MutationObserver(mutationCallback)
+    };
+    const defaultOptions = defaultsDeep(options ?? {}, DEFAULT_OPTIONS);
+    const observer = new MutationObserver(mutationCallback);
 
-    observer.observe(target, defaultOptions)
+    observer.observe(target, defaultOptions);
 
-    return observer
+    return observer;
 }

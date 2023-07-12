@@ -5,43 +5,44 @@
 // Prefix as well
 // https://www.npmjs.com/package/postcss-variables-prefixer-plugin
 
-import type { IOptions } from './types'
+import type { IOptions } from './types';
 
-import { defaultsDeep } from '@democrance/utils'
+import { defaultsDeep, toType } from '@democrance/utils';
 
-import { initObserver } from './initObserver'
-import { query } from './query'
-import { createNormalizer, cssRulesEntries, getAttribute, testCrossOrigin } from './styleHelpers'
+import { initObserver } from './initObserver';
+import { query } from './query';
+import { createNormalizer, cssRulesEntries, getAttribute, testCrossOrigin } from './styleHelpers';
 
-let id = 0
+let id = 0;
 
 // https://github.com/colxi/css-global-variables
 export function CSSGlobalProperties(conf: IOptions = {}) {
     if (typeof window === 'undefined')
-        return
+        return;
+
     // Usage of 'new' keyword is mandatory
     // if (!new.target) throw new Error('Calling CSSGlobalProperties constructor without "new" is forbidden');
 
     // Validate Config Object type and property values types
-    if (Object.prototype.toString.call(conf) !== '[object Object]' && Object.getPrototypeOf(conf) !== Object.getPrototypeOf({}))
-        throw new Error('[CSSGlobalProperties] - constructor expects a config Object as first argument')
+    if (toType(conf) !== 'object' && Object.getPrototypeOf(conf) !== Object.getPrototypeOf({}))
+        throw new Error('[CSSGlobalProperties] - constructor expects a config Object as first argument');
 
     if ('normalize' in conf && typeof conf.normalize !== 'function')
-        throw new Error('[CSSGlobalProperties] - Config property "normalize" must be a function')
+        throw new Error('[CSSGlobalProperties] - Config property "normalize" must be a function');
 
     if ('autoprefix' in conf && typeof conf.autoprefix !== 'boolean')
-        throw new Error('[CSSGlobalProperties] - Config property "autoprefix" must be a boolean')
+        throw new Error('[CSSGlobalProperties] - Config property "autoprefix" must be a boolean');
 
     if ('filter' in conf) {
         if (typeof conf.filter !== 'string') {
-            throw new TypeError('[CSSGlobalProperties] - Config property "filter" must be a string')
+            throw new TypeError('[CSSGlobalProperties] - Config property "filter" must be a string');
         }
         else {
             try {
-                query(conf.filter)
+                query(conf.filter);
             }
             catch (e) {
-                throw new Error(`[CSSGlobalProperties] - Provided "filter" is an invalid selector ("${conf.filter}")`)
+                throw new Error(`[CSSGlobalProperties] - Provided "filter" is an invalid selector ("${conf.filter}")`);
             }
         }
     }
@@ -53,22 +54,23 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
         normalize: null,
 
         Logger: console,
+        silent: true,
 
         ignoreAttrTag: 'css-global-vars-ignore',
         idAttrTag: 'css-global-vars-id',
 
         // document.documentElement
         selector: ':root',
-    })
+    });
 
     // Generate and assign instance ID
-    globalConfigs.id = ++id
+    globalConfigs.id = ++id;
 
     // varsCacheMap : Contains (internally) the CSS variables and values.
-    const varsCacheMap = new Map()
-    const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: varsCacheMap })
+    const varsCacheMap = new Map();
+    const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: varsCacheMap });
 
-    const normalizeVariableName = createNormalizer(globalConfigs)
+    const normalizeVariableName = createNormalizer(globalConfigs);
 
     /**
      *
@@ -82,72 +84,72 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
      */
     function updateVarsCache() {
         // iterate all document stylesheets
-        const styleSheets = Array.from(document.styleSheets)
+        const styleSheets = Array.from(document.styleSheets);
 
-        const styleSheetsLen = styleSheets.length
+        const styleSheetsLen = styleSheets.length;
         for (let i = 0; i < styleSheetsLen; i++) {
-            const styleSheet = styleSheets[i]
+            const styleSheet = styleSheets[i];
 
             // This is usually an HTML <link> or <style> element, but can also return a processing instruction node in the case of <?xml-stylesheet ?>.
             if (styleSheet.ownerNode instanceof ProcessingInstruction)
-                continue
+                continue;
 
             // if element has the ignore directive, ignore it and continue
             if (styleSheet.ownerNode.getAttribute(globalConfigs.ignoreAttrTag))
-                continue
+                continue;
 
             // if filters have been provided to constructor...
             if (globalConfigs.filter) {
                 // get all elements that match the filter...
-                const elements = Array.from(document.querySelectorAll(globalConfigs.filter))
-                let isMember = false
+                const elements = Array.from(document.querySelectorAll(globalConfigs.filter));
+                let isMember = false;
 
                 // iterate all selector resulting collection
-                const elementsLen = Object.keys(elements).length
+                const elementsLen = Object.keys(elements).length;
                 for (let i = 0; i < elementsLen; i++) {
                     // if current element matches the current stylesheet,
                     // set flag to true and finish iteration
                     if (elements[i] === styleSheet.ownerNode) {
-                        isMember = true
-                        break
+                        isMember = true;
+                        break;
                     }
                 }
 
                 // if any filtered element matched the current stylesheet abort.
                 if (!isMember)
-                    return false
+                    return false;
             }
 
-            const abort = testCrossOrigin(styleSheet, globalConfigs)
+            const abort = testCrossOrigin(styleSheet, globalConfigs);
             if (abort) {
-                if (typeof abort !== 'boolean') {
+                if (!globalConfigs.silent && typeof abort !== 'boolean') {
                     if ((abort.reason === 'cors'))
-                        globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', abort.error)
+                        globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', abort.error);
                     else
-                        globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', abort.error)
+                        globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', abort.error);
                 }
 
-                break
+                break;
             }
 
             // if Style element has been previously analyzed ignore it;
             // if not, mark element as analyzed to prevent future analysis
-            const ids = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag)
+            const ids = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag);
 
             if (String(ids).split(',').includes(String(globalConfigs.id)))
-                continue
+                continue;
 
             // not cached yet!
             // set the new value to the object
-            const value = getAttribute(styleSheet.ownerNode, globalConfigs)
-            styleSheet.ownerNode.setAttribute(globalConfigs.idAttrTag, String(value))
+            const value = getAttribute(styleSheet.ownerNode, globalConfigs);
+            styleSheet.ownerNode.setAttribute(globalConfigs.idAttrTag, String(value));
 
             // iterate each CSS rule...
-            const rules = Array.from(styleSheet.cssRules)
+            const rules = Array.from(styleSheet.cssRules);
             cssRulesEntries(rules, globalConfigs)
-                .forEach((prop) => {
-                    varsCacheMap.set(prop[0], prop[1])
-                })
+                .forEach(prop => {
+                    varsCacheMap.set(prop[0], prop[1]);
+                });
         }
 
         // After collecting all the variables definitions, check their computed
@@ -156,26 +158,26 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
         varsCacheMap.forEach((value, p) => {
             const getPropertyValue = window
                 .getComputedStyle(document.documentElement, null)
-                .getPropertyValue(p).trim()
+                .getPropertyValue(p).trim();
 
-            varsCacheMap.set(p, getPropertyValue)
-        })
+            varsCacheMap.set(p, getPropertyValue);
+        });
 
-        return true
+        return true;
     }
 
     // Initialize the observer. Set the target and the config
     initObserver({
         options: conf.mutationObserveOptions,
         onUpdate: () => {
-            updateVarsCache()
-            window.dispatchEvent(stylesUpdatedEvent)
+            updateVarsCache();
+            window.dispatchEvent(stylesUpdatedEvent);
         },
-    })
+    });
 
     // analyze the document style elements to generate
     // the collection of CSS variables, and return the proxy object
-    updateVarsCache()
+    updateVarsCache();
 
     /**
      *
@@ -191,60 +193,60 @@ export function CSSGlobalProperties(conf: IOptions = {}) {
             // check if there is any new CSS declarations to be considered
             // before returning any
             // updateVarsCache();
-            const normalizedName = normalizeVariableName(name)
-            return Reflect.get(target, normalizedName)
+            const normalizedName = normalizeVariableName(name);
+            return Reflect.get(target, normalizedName);
         },
         set(target, name, value) {
             // updateVarsCache();
-            const normalizedName = normalizeVariableName(name)
+            const normalizedName = normalizeVariableName(name);
 
             // set the variable value
-            document.documentElement.style.setProperty(normalizedName, String(value))
+            document.documentElement.style.setProperty(normalizedName, String(value));
 
             // update the cache object
-            return Reflect.set(target, name, value)
+            return Reflect.set(target, name, value);
         },
         deleteProperty() {
             /* not allowed */
             // updateVarsCache();
-            return false
+            return false;
         },
         has(target, name) {
             // updateVarsCache();
-            const normalizedName = normalizeVariableName(name)
-            return Reflect.has(target, normalizedName)
+            const normalizedName = normalizeVariableName(name);
+            return Reflect.has(target, normalizedName);
         },
         defineProperty(target, name, attr) {
             //
             // it only allows to set the value
             //
             // updateVarsCache();
-            const normalizedName = normalizeVariableName(name)
+            const normalizedName = normalizeVariableName(name);
 
             if (attr?.value != null) {
-                const value = attr.value.toString()
+                const value = attr.value.toString();
 
                 // set the CSS variable value
-                document.documentElement.style.setProperty(normalizedName, value)
+                document.documentElement.style.setProperty(normalizedName, value);
 
                 // update the cache
-                Reflect.set(target, normalizedName, value)
+                Reflect.set(target, normalizedName, value);
             }
 
-            return false // orTarget
+            return false; // orTarget
         },
         ownKeys(target) {
             // updateVarsCache();
-            return Reflect.ownKeys(target)
+            return Reflect.ownKeys(target);
         },
         getOwnPropertyDescriptor(target, name) {
             // updateVarsCache();
-            const normalizedName = normalizeVariableName(name)
-            return Reflect.getOwnPropertyDescriptor(target, normalizedName)
+            const normalizedName = normalizeVariableName(name);
+            return Reflect.getOwnPropertyDescriptor(target, normalizedName);
         },
-    })
+    });
 }
 
 export const cssVars = CSSGlobalProperties({
     // normalize: name => name.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase(),
-})
+});

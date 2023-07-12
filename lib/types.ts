@@ -1,4 +1,4 @@
-export type CSSPixelValue = '0' | `${string}px`
+export type CSSPixelValue = '0' | `${string}px`;
 
 export type CSSLengthValue = '0' | string | '%'
 | 'ch'
@@ -14,29 +14,30 @@ export type CSSLengthValue = '0' | string | '%'
 | 'vh'
 | 'vmax'
 | 'vmin'
-| 'vw'
+| 'vw';
 
-export type CSSAngleValue = string | 'deg' | 'grad' | 'rad' | 'turn'
+export type CSSAngleValue = string | 'deg' | 'grad' | 'rad' | 'turn';
 
-export type CSSHexColor = `#${string}`
+export type CSSHexColor = `#${string}`;
 
 export interface IOptions {
-    id?: number;
-    filter?: string;
-    autoprefix?: boolean;
-    normalize?: (name: string) => string;
-    mutationObserveOptions?: MutationObserverInit;
+    id?: number
+    filter?: string
+    autoprefix?: boolean
+    normalize?: (name: string) => string
+    mutationObserveOptions?: MutationObserverInit
 
-    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>;
+    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
+    silent?: boolean
 
-    ignoreAttrTag?: string;
-    idAttrTag?: string;
+    ignoreAttrTag?: string
+    idAttrTag?: string
 
-    selector?: string;
+    selector?: string
 }
 
 export interface InitObserver {
-    target?: Node;
-    options?: MutationObserverInit;
-    onUpdate?: () => void;
+    target?: Node
+    options?: MutationObserverInit
+    onUpdate?: () => void
 }

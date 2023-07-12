@@ -1,47 +1,49 @@
-import type { IOptions } from './types'
+import type { IOptions } from './types';
+
+import { toUpper } from '@democrance/utils';
 
 /**
- * Creates HTMLStyleElement with given parameters
+ * Creates a root style tag in the document's head.
  *
- * @param {Object} styleProperties
- * @param {string} styleProperties.media - Sets the media type.
- * @param {string} styleProperties.id - Sets the value of element's id content attribute.
-
- * @returns {HTMLStyleElement}
+ * @param config - An optional configuration object.
+ * @param config.media - Specifies the media type of the style.
+ *   Default is 'all'.
+ * @param config.id - An optional id for the style tag.
+ *   A random UUID will be generated if no id is provided.
+ * @returns The created style element.
  */
 export function createRootStyle({ media = 'all', id = undefined } = {}) {
     // Create the <style> tag
-    const style = document.createElement('style')
+    const style = document.createElement('style');
 
     // style.rel = 'stylesheet'
-    style.media = media
-    style.id = id ?? window.crypto.randomUUID()
+    style.media = media;
+    style.id = id ?? window.crypto.randomUUID();
 
     // WebKit hack
-    style.appendChild(document.createTextNode(''))
+    style.appendChild(document.createTextNode(''));
 
     // Add the <style> element to the page
-    document.head.appendChild(style)
+    document.head.appendChild(style);
 
-    return style
-}
-
-export function addCSSRule(sheet: HTMLStyleElement, selector = ':root', rules: string, index = 0) {
-    if ('insertRule' in sheet.sheet)
-        sheet.sheet.insertRule(`${selector} { ${rules} } `, index)
+    return style;
 }
 
 /**
+ * Adds a CSS rule to a given stylesheet.
  *
- * @param {Node} node - Node is an interface from which a number of DOM API object types inherit.
- * @param {[ 'STYLE', 'LINK' ]} allowedTagNames - Names of the allowed tags
- * @returns {boolean}
+ * @param sheet - The stylesheet to which the rule should be added.
+ * @param selector - The CSS selector for the rule. Defaults to ':root'.
+ * @param rules - The CSS rules to be added.
+ * @param index - The index at which the rule should be inserted in the stylesheet. Defaults to 0.
  */
+export function addCSSRule(sheet: HTMLStyleElement, selector = ':root', rules: string, index = 0): void {
+    if ('insertRule' in sheet.sheet)
+        sheet.sheet.insertRule(`${selector} { ${rules} }`, index);
+}
+
 export function isAllowedTagName(node: Node, allowedTagNames = [ 'STYLE', 'LINK' ]) {
-    return 'tagName' in node
-        && allowedTagNames
-            .map(tag => tag.toUpperCase())
-            .includes(node.tagName as string) // (node.tagName === 'STYLE' || node.tagName === 'LINK')
+    return 'tagName' in node && allowedTagNames.includes(toUpper(node.tagName as string));
 }
 
 /**
@@ -54,62 +56,62 @@ export function isAllowedTagName(node: Node, allowedTagNames = [ 'STYLE', 'LINK'
  *
  * @returns {boolean|{ reason?: 'cors', error: Error }}
  */
-export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag }: IOptions): boolean | { reason?: 'cors', error: Error } {
+export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag }: IOptions): boolean | { reason?: 'cors'; error: Error } {
     try {
         // eslint-disable-next-line no-unused-expressions
-        styleSheet.cssRules
+        styleSheet.cssRules;
 
-        return false
+        return false;
     }
     catch (e) {
-        const error = new Error(e)
+        const error = new Error(e);
 
         if (!(styleSheet.ownerNode as Element).hasAttribute(ignoreAttrTag)) {
-            (styleSheet.ownerNode as Element).setAttribute(ignoreAttrTag, 'true')
+            (styleSheet.ownerNode as Element).setAttribute(ignoreAttrTag, 'true');
 
             return {
                 reason: 'cors',
                 error,
-            }
+            };
         }
 
-        return { error }
+        return { error };
     }
 }
 
 /**
+ * Iterates over a list of CSS rules, finding CSSStyleRules that match a specific selector
+ * and returns an array of tuples representing CSS properties and their values.
  *
- * @param {CSSRule[]} rules
- * @param {IOptions} globalConfigs
- *
- * @returns {[ string, string ][]} CSS Rule entries
+ * @param rules - An array of CSSRule objects.
+ * @param options - An options object. It requires a 'selector' property.
+ * @returns An array of tuples. Each tuple consists of a CSS property and its corresponding value.
  */
 export function cssRulesEntries(rules: CSSRule[], { selector }: IOptions) {
-    const propsEntries: [ string, string ][] = []
+    const propsEntries: [ string, string ][] = [];
 
-    const rulesLen = rules.length
-    for (let r = 0; r < rulesLen; r++) {
-        const cssRule = rules[r]
-
+    for (const cssRule of rules) {
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
         if (cssRule instanceof CSSStyleRule) {
             // select all elements in the scope
             // if (__scopes__[cssRule.selectorText]) {
             if (cssRule.selectorText === selector) {
-                let css = cssRule.cssText.split('{')
-                css = css[1].replace('}', '').split(';')
+                const css = cssRule.cssText
+                    .split('{')[1]
+                    .replace('}', '')
+                    .split(';');
 
-                const cssLen = css.length
+                const cssLen = css.length;
                 // iterate each :root CSS property
                 for (let i = 0; i < cssLen; i++) {
-                    const prop = css[i].split(':')
+                    const prop = css[i].split(':');
 
                     // if is a CSS variable property, insert in the cache
                     if (prop.length === 2 && prop[0].indexOf('--') === 1) {
                         propsEntries.push([
                             prop[0].trim(),
                             prop[1].trim(),
-                        ])
+                        ]);
                         // varsCacheMap.set(prop[0].trim(), prop[1].trim())
                     }
                 }
@@ -117,7 +119,7 @@ export function cssRulesEntries(rules: CSSRule[], { selector }: IOptions) {
         }
     }
 
-    return propsEntries
+    return propsEntries;
 }
 
 /**
@@ -128,14 +130,14 @@ export function cssRulesEntries(rules: CSSRule[], { selector }: IOptions) {
  * @returns {string} Node attribute or concatenated list of attributes
  */
 export function getAttribute(node: Element, { id, idAttrTag }: IOptions) {
-    let value: string = node.getAttribute(idAttrTag)
+    let value: string = node.getAttribute(idAttrTag);
     // check if is null or empty (cross-browser solution),
     // and attach the new instance id
     if (value == null || value === '')
-        return `${id}`
-    value += `,${id}`
+        return `${id}`;
+    value += `,${id}`;
 
-    return value
+    return value;
 }
 
 /**
@@ -148,28 +150,28 @@ export function getAttribute(node: Element, { id, idAttrTag }: IOptions) {
 * @return {Function} - Creates normalizer function base on givent options
 */
 export function createNormalizer({ normalize, autoprefix }: IOptions) {
-    const cache = new Map()
+    const cache = new Map();
 
     return (name: string | symbol): string => {
         if (cache.has(name))
-            return cache.get(name)
+            return cache.get(name);
 
-        let normalizedName = typeof name === 'symbol' ? name.description : name ?? ''
+        let normalizedName = typeof name === 'symbol' ? name.description : name ?? '';
         // if normalize was provided execute it
         if (normalize)
-            normalizedName = normalize(normalizedName)
+            normalizedName = normalize(normalizedName);
 
         // If CSS variable name does not start with '--', prefix it, when autoprefix=true,
         // or trigger an Error when not.
         if (normalizedName.substring(0, 2) !== '--') {
             if (autoprefix)
-                normalizedName = `--${normalizedName}`
+                normalizedName = `--${normalizedName}`;
 
             else
-                throw new Error('[normalizeVariableName] - Invalid CSS Variable name. Name must start with "--" (autoprefix=false)')
+                throw new Error('[normalizeVariableName] - Invalid CSS Variable name. Name must start with "--" (autoprefix=false)');
         }
-        cache.set(name, normalizedName)
+        cache.set(name, normalizedName);
 
-        return normalizedName
-    }
+        return normalizedName;
+    };
 }

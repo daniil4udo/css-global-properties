@@ -1,7 +1,0 @@
-:root{
-    /* 
-      Warning: Adding more variables will require changes in
-      test.js to prevent false positives
-     */
-    --remoteProp : #AABBCC;
-}

@@ -1,5 +1,16 @@
 {
-	"extends": "@vue/tsconfig/tsconfig.dom.json",
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "baseUrl": ".",
+        "importHelpers": true,
+        "isolatedModules": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "strict": true,
+        "skipLibCheck": true
+    },
     "include": [
         "env.d.ts",
         "./lib/*.ts"
@@ -8,19 +19,5 @@
         "dist",
         "node_modules",
         "tests/*"
-    ],
-    "compilerOptions": {
-        "baseUrl": ".",
-        "outDir": "dist",
-        "target": "ES2015",
-        "module": "ES2015",
-        "strict": false,
-        "declaration": true,
-        "pretty": true,
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "importHelpers": true,
-        "isolatedModules": true,
-        "skipLibCheck": true
-    },
+    ]
 }

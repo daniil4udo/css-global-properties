@@ -1,55 +1,69 @@
-import type { InitObserver } from './types';
+import type { InitObserver } from './types'
 
-import { defaultsDeep } from '@democrance/utils';
+import { defaultsDeep } from '@democrance/utils'
 
-import { isAllowedTagName } from './styleHelpers';
+import { isAllowedTagName } from './styleHelpers'
 
 const DEFAULT_OPTIONS: MutationObserverInit = {
     attributes: false,
     childList: true,
     characterData: true,
     subtree: true,
-};
+}
 
 /**
+ * Initializes a MutationObserver to watch for DOM mutations.
  *
- * Create a mutation observer
- * When new styles are attached to the DOM (Style or Link element)
- * will perform an update of the document CSS variables
+ * The function takes an optional configuration object with a target element to observe, options for the observer,
+ * and a callback function that gets executed when a mutation occurs. The callback will only be triggered if
+ * one of the mutations involves an element with a tag name that passes the `isAllowedTagName` check.
  *
- * @param {InitObserver} target
+ * @remarks
+ * - By default, the observer will target the `document.documentElement` if no `target` is provided.
+ * - The `onUpdate` function is scheduled via `requestAnimationFrame` to ensure that any required changes
+ *   are processed as soon as possible in the browser's update cycle.
  *
- * @returns {MutationObserver}
+ * @example
+ * ```typescript
+ * const onUpdate = () => console.log('DOM updated');
+ * const observer = initObserver({ onUpdate });
+ * ```
  *
+ * @param config - Configuration options for initializing the observer.
+ * @param config.target - The DOM element that will be observed. Default is `document.documentElement`.
+ * @param config.options - Optional configuration object for the MutationObserver.
+ * @param config.onUpdate - Callback function to be executed when a relevant mutation occurs.
+ *
+ * @returns A MutationObserver instance configured based on the given options.
  */
-export function initObserver({ target = document.documentElement, options = {}, onUpdate }: InitObserver = {}) {
-    const mutationCallback: MutationCallback = mutations => {
-        let update = false;
+export function initObserver({
+    target = document.documentElement,
+    options,
+    onUpdate,
+}: InitObserver = {}): MutationObserver {
+    const callback: MutationCallback = mutations => {
+        let update = false
 
-        const mutationsRecordLen = mutations.length;
-        for (let m = 0; m < mutationsRecordLen; m++) {
-            const mutation = mutations[m];
+        for (const mutation of mutations) {
+            if (mutation.type !== 'childList')
+                continue
 
-            if (mutation.type === 'childList') {
-                const addedNodesLen = mutation.addedNodes.length;
-                for (let i = 0; i < addedNodesLen; i++) {
-                    if (isAllowedTagName(mutation.addedNodes[i])) {
-                        update = true;
-                        break;
-                    }
+            for (const anode of mutation.addedNodes) {
+                if (isAllowedTagName(anode)) {
+                    update = true
+                    break
                 }
+            }
 
-                // if update already
-                // no need to check deleted nodes, just trigger cache update
-                if (update)
-                    break;
+            // if update already
+            // no need to check deleted nodes, just trigger cache update
+            if (update)
+                break
 
-                const removedNodesLen = mutation.removedNodes.length;
-                for (let i = 0; i < removedNodesLen; i++) {
-                    if (isAllowedTagName(mutation.removedNodes[i])) {
-                        update = true;
-                        break;
-                    }
+            for (const rnode of mutation.removedNodes) {
+                if (isAllowedTagName(rnode)) {
+                    update = true
+                    break
                 }
             }
         }
@@ -63,15 +77,15 @@ export function initObserver({ target = document.documentElement, options = {}, 
             // }, 200);
             if (typeof onUpdate === 'function') {
                 requestAnimationFrame(() => {
-                    onUpdate();
-                });
+                    onUpdate()
+                })
             }
         }
-    };
-    const defaultOptions = defaultsDeep(options ?? {}, DEFAULT_OPTIONS);
-    const observer = new MutationObserver(mutationCallback);
+    }
 
-    observer.observe(target, defaultOptions);
+    const observer = new MutationObserver(callback)
 
-    return observer;
+    observer.observe(target, defaultsDeep(options ?? {}, DEFAULT_OPTIONS))
+
+    return observer
 }

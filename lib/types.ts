@@ -1,4 +1,4 @@
-export type CSSPixelValue = '0' | `${string}px`;
+export type CSSPixelValue = '0' | `${string}px`
 
 export type CSSLengthValue = '0' | string | '%'
 | 'ch'
@@ -14,28 +14,56 @@ export type CSSLengthValue = '0' | string | '%'
 | 'vh'
 | 'vmax'
 | 'vmin'
-| 'vw';
+| 'vw'
 
-export type CSSAngleValue = string | 'deg' | 'grad' | 'rad' | 'turn';
+export type CSSAngleValue = string | 'deg' | 'grad' | 'rad' | 'turn'
 
-export type CSSHexColor = `#${string}`;
+export type CSSHexColor = `#${string}`
 
-export interface IOptions {
+/**
+ * Interface for Options
+ */
+export interface CSSGlobalPropertiesOptions {
     id?: number
     filter?: string
+
+    /** @default true */
     autoprefix?: boolean
+
+    /**
+     * @default null
+     */
     normalize?: (name: string) => string
+
+    /**
+     * MutationObserver options
+     */
     mutationObserveOptions?: MutationObserverInit
 
+    /** @default console */
     Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
+
+    /** @default true */
     silent?: boolean
 
+    /**
+     * Attribute to ignore.
+     * @default 'css-global-vars-ignore'
+     */
     ignoreAttrTag?: string
+
+    /**
+     * ID Attribute tag.
+     * @default 'css-global-vars-id'
+     */
     idAttrTag?: string
 
+    /**
+     * CSS Selector.
+     * @default ':root'
+     */
     selector?: string
 }
-
 export interface InitObserver {
     target?: Node
     options?: MutationObserverInit

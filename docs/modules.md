@@ -80,7 +80,7 @@ cssProps.stop();
 
 #### Defined in
 
-[CSSGlobalProperties.ts:58](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/CSSGlobalProperties.ts#L58)
+[CSSGlobalProperties.ts:58](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/CSSGlobalProperties.ts#L58)
 
 ___
 
@@ -119,7 +119,7 @@ addCSSRoot(styleSheet, { selector: '.my-class', rules: 'background-color: red; c
 
 #### Defined in
 
-[styleHelpers.ts:127](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L127)
+[styleHelpers.ts:127](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L127)
 
 ___
 
@@ -164,7 +164,7 @@ const styleElement = createRootStyle({ media: 'print', id: 'print-styles' });
 
 #### Defined in
 
-[styleHelpers.ts:84](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L84)
+[styleHelpers.ts:84](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L84)
 
 ___
 
@@ -205,7 +205,7 @@ const normalized = normalizer('my-var'); // Output: '--MY-VAR'
 
 #### Defined in
 
-[styleHelpers.ts:303](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L303)
+[styleHelpers.ts:303](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L303)
 
 ___
 
@@ -246,7 +246,7 @@ const entries = cssRulesEntries(myRules as any[], options);
 
 #### Defined in
 
-[styleHelpers.ts:245](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L245)
+[styleHelpers.ts:245](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L245)
 
 ___
 
@@ -293,7 +293,7 @@ const isAllowed = isAllowedTagName(textNode); // Returns false
 
 #### Defined in
 
-[styleHelpers.ts:158](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L158)
+[styleHelpers.ts:158](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L158)
 
 ___
 
@@ -338,7 +338,7 @@ const result = testCrossOrigin(mySheet, { ignoreAttrTag: 'data-ignore-cors' });
 
 #### Defined in
 
-[styleHelpers.ts:195](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L195)
+[styleHelpers.ts:195](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L195)
 
 ___
 
@@ -386,4 +386,4 @@ remove(); // Removes the <style> element from the document
 
 #### Defined in
 
-[styleHelpers.ts:24](https://github.com/daniil4udo/css-global-properties/blob/52c88b5/lib/styleHelpers.ts#L24)
+[styleHelpers.ts:24](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/styleHelpers.ts#L24)

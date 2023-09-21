@@ -15,7 +15,9 @@ let cssVar = CSSGlobalProperties();
 cssVar.myColor = "green";
 ```
 
-Demo: [See it in action](https://daniil4udo.github.io/css-global-properties/examples/demo-simple.html)
+List of all function you can find  [HERE](../docs/modules.md)
+
+<!-- Demo: [See it in action](https://daniil4udo.github.io/css-global-properties/examples/demo-simple.html) -->
 
 # Syntax
 

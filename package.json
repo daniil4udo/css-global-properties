@@ -32,8 +32,9 @@
     "scripts": {
         "build": "rimraf dist && tsup",
         "lint": "eslint . --color --fix --ignore-path .gitignore",
-        "prepublishOnly": "pnpm build",
+        "prepublishOnly": "pnpm typedoc && pnpm build",
         "release": "bumpp --commit --tag --no-push && pnpm publish --access public",
+        "typedoc": "typedoc --readme .github/README.md --plugin typedoc-plugin-markdown ./lib/index.ts",
         "test": "vitest --ui",
         "test:coverage": "vitest run --coverage"
     },
@@ -51,6 +52,8 @@
         "jsdom": "^22.1.0",
         "prettier": "^3.0.3",
         "tsup": "^7.2.0",
+        "typedoc": "^0.25.1",
+        "typedoc-plugin-markdown": "^3.16.0",
         "typescript": "^5.2.2",
         "vitest": "^0.34.4"
     }

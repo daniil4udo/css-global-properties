@@ -24,6 +24,7 @@ function keys<T extends Record<PropertyKey, any>>(obj: T): Array<keyof T> {
  * and a `stop` method to cease interactions and clean up observers.
  *
  * This function is a friendly fork of {@link https://github.com/colxi/css-global-variables | css-global-variables}.
+ *
  * **Note:** This function is intended to be used in a browser environment only.
  *
  * @param {CSSGlobalPropertiesOptions} [opts] - Configuration options for `CSSGlobalProperties`.

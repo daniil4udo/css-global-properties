@@ -1,4 +1,4 @@
-import type { CSSGlobalPropertiesOptions } from './types'
+import type { CSSGlobalPropertiesOptions, CSSRuleEntries } from './types'
 import type { Memoized } from 'micro-memoize'
 
 import { hasValue, memoize } from '@democrance/utils'
@@ -42,7 +42,7 @@ export function createHeadStyleTag({ media = 'all', id = undefined } = {}) {
 }
 
 /**
- * Inserts a new CSS rule into the specified stylesheet.
+ * Inserts a new CSS rule into the specified stylesheet using CSSOM
  *
  * Adds a CSS rule to an existing `<style>` sheet element by using the CSSStyleSheet's `insertRule` method.
  * The rule is inserted at a specific index in the stylesheet or appended at the end if no index is provided.
@@ -54,29 +54,15 @@ export function createHeadStyleTag({ media = 'all', id = undefined } = {}) {
  * @example
  * ```typescript
  * const styleSheet = createRootStyle(); // Assume createRootStyle creates and returns a <style> element
- * addCSSRule(styleSheet, { selector: '.my-class', rules: 'background-color: red; color: white;' });
+ * addCSSRoot(styleSheet, { selector: '.my-class', rules: 'background-color: red; color: white;' });
  * ```
  *
  * @param sheet - The `<style>` element containing the CSS rules.
  * @param opts - An optional object containing the rule options.
- * @param opts.selector - The CSS selector for the rule (default is `':root'`).
  * @param opts.rules - The CSS rules to apply to the selector, written as a string.
- * @param opts.index - The index at which to insert the rule in the stylesheet (default is `0`).
  */
-export function addCSSRule(sheet: HTMLStyleElement, opts: { selector?: string; rules?: string; index?: number } = {}) {
-    const {
-        selector = ':root',
-        rules,
-        index = 0,
-    } = opts
-
-    if (!hasValue(rules))
-        throw new TypeError('addCSSRule: missing required parameter "rules"')
-
-
-    if (sheet?.sheet != null && 'insertRule' in sheet.sheet)
-        sheet.sheet.insertRule(`${selector} { ${rules} }`, index)
-
+export function addCSSRoot(sheet: CSSStyleSheet, opts: { rules?: string } = {}) {
+    return sheet.insertRule(`:root { ${opts.rules} }`, 0)
 }
 
 /**
@@ -193,8 +179,8 @@ export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag = '' 
  *
  * @returns An array of key-value pairs representing the CSS custom properties and their values.
  */
-export function cssRulesEntries(rules: CSSRule[], { selector }: CSSGlobalPropertiesOptions): [string, string][] {
-    const propsEntries: [ string, string ][] = []
+export function cssRulesEntries(rules: CSSRule[], { selector }: CSSGlobalPropertiesOptions): CSSRuleEntries {
+    const propsEntries = [] as CSSRuleEntries
 
     for (const cssRule of rules) {
         // https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
@@ -217,7 +203,7 @@ export function cssRulesEntries(rules: CSSRule[], { selector }: CSSGlobalPropert
                             prop[0].trim(),
                             prop[1].trim(),
                         ])
-                        // varsCacheMap.set(prop[0].trim(), prop[1].trim())
+                        // cssVarsRecord.set(prop[0].trim(), prop[1].trim())
                     }
                 }
             }
@@ -226,8 +212,6 @@ export function cssRulesEntries(rules: CSSRule[], { selector }: CSSGlobalPropert
 
     return propsEntries
 }
-
-export { memoize } from '@democrance/utils'
 
 /**
  * Creates a function to normalize CSS variable names.
@@ -255,7 +239,9 @@ export { memoize } from '@democrance/utils'
  */
 export function createNormalizer({ normalize, autoprefix }: CSSGlobalPropertiesOptions = {}) {
     const normalizer = (name: string | symbol): string => {
-        let normalizedName = typeof name === 'symbol' ? name.description! : name
+        let normalizedName = typeof name === 'symbol'
+            ? name.description!
+            : name
 
         // if normalize was provided execute it
         if (normalize)

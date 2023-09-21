@@ -7,12 +7,12 @@
 
 import type { CSSGlobalPropertiesOptions } from './types'
 
-import { defaultsDeep,  isPlainObject, queryElement } from '@democrance/utils'
+import { defaultsDeep,  isPlainObject, queryElement, toLower } from '@democrance/utils'
 
 import { initObserver } from './initObserver'
 import { createNormalizer, cssRulesEntries,  testCrossOrigin } from './styleHelpers'
 
-function keys<T>(obj: T): Array<keyof T> {
+function keys<T extends Record<PropertyKey, any>>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>
 }
 
@@ -57,15 +57,16 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
         id: 0,
         idAttrTag: 'data-css-global-vars-id',
         ignoreAttrTag: 'data-css-global-vars-ignore',
-        Logger: console,
         normalize: null,
         selector: ':root',
         silent: true,
+        logger: console,
     })
 
-    // varsCacheMap : Contains (internally) the CSS variables and values.
-    const varsCacheMap = {} as Record<CSSVarNames | `--${CSSVarNames}`, string>
-    const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: varsCacheMap })
+    // cssVarsRecord : Contains (internally) the CSS variables and values.
+    const cssVarsRecord = {} as Record<CSSVarNames | `--${CSSVarNames}`, string>
+
+    const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: cssVarsRecord })
 
     const normalizeVariableName = createNormalizer(globalConfigs)
 
@@ -114,13 +115,13 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
             const abort = testCrossOrigin(styleSheet, globalConfigs)
             if (abort) {
                 if (!globalConfigs.silent && typeof abort !== 'boolean') {
-                    if ((abort.reason === 'cors'))
-                        globalConfigs.Logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', abort.error)
+                    if ((toLower(abort.reason) === 'cors'))
+                        globalConfigs.logger.warn('[updateVarsCache] - Cross Origin Policy restrictions are blocking the access to the CSS rules of a remote stylesheet. The affected stylesheet is going to be ignored by CSSGlobalProperties. Check the documentation for instructions to prevent this issue.', abort.error)
                     else
-                        globalConfigs.Logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', abort.error)
+                        globalConfigs.logger.warn('[updateVarsCache] - Unexpected error reading CSS properties.', abort.error)
                 }
 
-                break
+                continue
             }
 
             // if Style element has been previously analyzed ignore it;
@@ -131,37 +132,35 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
             if (ids != null)
                 continue
 
-            // // not cached yet!
-            // // set the new value to the object
-            // let value = styleSheet.ownerNode.getAttribute(globalConfigs.idAttrTag);
-            // if (!hasValue(value))
-            //     value = `${globalConfigs.id}`;
-            // else
-            //     value += `,${id}`;
-
+            // not cached yet!
+            // set the new value to the object
             globalConfigs.id += 1
             styleSheet.ownerNode.setAttribute(globalConfigs.idAttrTag, String(globalConfigs.id))
 
             // iterate each CSS rule...
-            const rules = Array.from(styleSheet.cssRules)
-            const cssEntries = cssRulesEntries(rules, globalConfigs)
+            const cssEntries = cssRulesEntries(
+                styleSheet.cssRules,
+                globalConfigs,
+            )
 
-            if (!cssEntries.length)
-                continue
-
-            Object.assign(varsCacheMap, Object.fromEntries(cssEntries))
+            if (cssEntries.length > 0) {
+                Object.assign(
+                    cssVarsRecord,
+                    Object.fromEntries(cssEntries),
+                )
+            }
         }
 
         // After collecting all the variables definitions, check their computed
         // values, consulting the :root element inline style definitions,
         // and assigning those values to the variables, in cache
-        keys(varsCacheMap).forEach(key => {
+        keys(cssVarsRecord).forEach(key => {
             const getPropertyValue = window
                 .getComputedStyle(document.documentElement, null)
                 .getPropertyValue(key).trim()
 
-            // varsCacheMap.set(key, getPropertyValue);
-            varsCacheMap[key] = getPropertyValue
+            // cssVarsRecord.set(key, getPropertyValue);
+            cssVarsRecord[key] = getPropertyValue
         })
 
         return true
@@ -189,7 +188,7 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
      * @type {Proxy}
      *
      */
-    return new Proxy(varsCacheMap, {
+    return new Proxy(cssVarsRecord, {
         get(target, name) {
             // check if there is any new CSS declarations to be considered
             // before returning any

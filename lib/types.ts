@@ -41,7 +41,7 @@ export interface CSSGlobalPropertiesOptions {
     mutationObserveOptions?: MutationObserverInit
 
     /** @default console */
-    Logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
+    logger?: Pick<Console, 'info' | 'debug' | 'error' | 'warn'>
 
     /** @default true */
     silent?: boolean
@@ -64,6 +64,9 @@ export interface CSSGlobalPropertiesOptions {
      */
     selector?: string
 }
+
+export type CSSRuleEntries = Array<[CSSVarName: string, CSSVarValue: string]>
+
 export interface InitObserver {
     target?: Node
     options?: MutationObserverInit

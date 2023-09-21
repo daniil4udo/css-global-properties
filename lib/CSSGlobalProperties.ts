@@ -108,8 +108,8 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
                 }
 
                 // if any filtered element matched the current stylesheet abort.
-                if (!isMember)
-                    return false
+                if (isMember)
+                    continue
             }
 
             const abort = testCrossOrigin(styleSheet, globalConfigs)

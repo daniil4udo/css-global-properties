@@ -179,7 +179,7 @@ export function testCrossOrigin(styleSheet: CSSStyleSheet, { ignoreAttrTag = '' 
  *
  * @returns An array of key-value pairs representing the CSS custom properties and their values.
  */
-export function cssRulesEntries(rules: CSSRule[], { selector }: CSSGlobalPropertiesOptions): CSSRuleEntries {
+export function cssRulesEntries(rules: CSSRuleList | CSSRule[], { selector }: CSSGlobalPropertiesOptions): CSSRuleEntries {
     const propsEntries = [] as CSSRuleEntries
 
     for (const cssRule of rules) {

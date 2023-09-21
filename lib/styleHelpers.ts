@@ -1,7 +1,64 @@
 import type { CSSGlobalPropertiesOptions, CSSRuleEntries } from './types'
 import type { Memoized } from 'micro-memoize'
 
-import { hasValue, memoize } from '@democrance/utils'
+import { memoize } from '@democrance/utils'
+
+/**
+ * Creates and returns an object containing a dynamically created <style> tag,
+ * a setProperty function, and a remove function.
+ *
+ * - The `style` member contains the dynamically created <style> tag.
+ * - The `setProperty` function allows you to dynamically set CSS properties for the :root selector.
+ * - The `remove` function allows you to remove the dynamically created <style> tag from the document head.
+ *
+ * @example
+ * const { style, setProperty, remove } = useRootStyle();
+ * setProperty("--my-css-variable", "red"); // Sets a CSS variable in :root
+ * console.log(style); // Logs the <style> element
+ * remove(); // Removes the <style> element from the document
+ *
+ * @returns An object containing the dynamically created <style> tag (`style`),
+ * a `setProperty` function for setting CSS properties, and a `remove` function to
+ * remove the <style> tag.
+ */
+export function useRootStyle(opts: CSSGlobalPropertiesOptions) {
+    // Create a <style> tag and get its style sheet
+    const { style, remove } = createHeadStyleTag()
+
+    // set an idAttrTag ID to skip processing it with CSSGlobalProperties
+    style.setAttribute(opts.idAttrTag!, 'root')
+
+    const headStyleTag = style.sheet as CSSStyleSheet
+
+    // Add a :root selector to the style sheet and get its index
+    const rootTagIndex = addCSSRoot(headStyleTag)
+
+    const getComputedStyle = () => {
+        return window.getComputedStyle(style)
+    }
+
+    const getPropertyValue = (name: string) => {
+        return getComputedStyle().getPropertyValue(name).trim()
+    }
+
+    // Function to set CSS properties for the :root selector
+    const setProperty = (name: string, value: string) => {
+        const cssRule = headStyleTag.cssRules[rootTagIndex] as CSSStyleRule
+        if (cssRule && cssRule.style)
+            cssRule.style.setProperty(name, value)
+        else
+            // default to document.documentElement.style.setProperty
+            document.documentElement.style.setProperty(name, value)
+    }
+
+    return {
+        style,
+        getComputedStyle,
+        setProperty,
+        getPropertyValue,
+        removeStyle: remove,
+    }
+}
 
 /**
  * Creates and appends a `<style>` element to the document's head.
@@ -24,21 +81,27 @@ import { hasValue, memoize } from '@democrance/utils'
  *
  * @returns The created and appended `<style>` element
  */
-export function createHeadStyleTag({ media = 'all', id = undefined } = {}) {
-    // Create the <style> tag
+export function createHeadStyleTag({ media = 'all', id = undefined }: { media?: string; id?: string } = {}) {
     const style = document.createElement('style')
 
-    // style.rel = 'stylesheet'
-    style.media = media
-    style.id = id ?? window.crypto.randomUUID()
+    // If style is not yet connected, append it to the document head
+    if (!style.isConnected) {
+        style.type = 'text/css'
+        style.id = id ?? window.crypto.randomUUID().toString()
+        if (media)
+            style.media = media
 
-    // WebKit hack
-    style.appendChild(document.createTextNode(''))
+        // Add an empty text node as a WebKit hack
+        style.appendChild(document.createTextNode(''))
 
-    // Add the <style> element to the page
-    document.head.appendChild(style)
+        // Append the <style> tag to the document head
+        document.head.appendChild(style)
+    }
 
-    return style
+    return {
+        style,
+        remove: () => document.head.removeChild(style),
+    }
 }
 
 /**

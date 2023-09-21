@@ -10,16 +10,51 @@ import type { CSSGlobalPropertiesOptions } from './types'
 import { defaultsDeep,  isPlainObject, queryElement, toLower } from '@democrance/utils'
 
 import { initObserver } from './initObserver'
-import { createNormalizer, cssRulesEntries,  testCrossOrigin } from './styleHelpers'
+import { createNormalizer, cssRulesEntries, testCrossOrigin,  useRootStyle } from './styleHelpers'
 
 function keys<T extends Record<PropertyKey, any>>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>
 }
 
-// https://github.com/colxi/css-global-variables
-export function CSSGlobalProperties<CSSVarNames extends string>(
-    opts: CSSGlobalPropertiesOptions = {},
-) {
+
+/**
+ * Creates an object to interact with global CSS properties.
+ * This function provides a mechanism to live-get and set CSS variables and their values.
+ * The returned object provides a proxy to directly interact with CSS variables
+ * and a `stop` method to cease interactions and clean up observers.
+ *
+ * This function is a friendly fork of {@link https://github.com/colxi/css-global-variables | css-global-variables}.
+ * **Note:** This function is intended to be used in a browser environment only.
+ *
+ * @param {CSSGlobalPropertiesOptions} [opts] - Configuration options for `CSSGlobalProperties`.
+ * @param {boolean} [opts.autoprefix] - Indicates whether to autoprefix CSS properties.
+ * @param {number} [opts.id] - ID associated with the instance configuration.
+ * @param {string} [opts.idAttrTag] - HTML attribute for marking analyzed elements.
+ * @param {string} [opts.ignoreAttrTag] - HTML attribute for marking ignored elements.
+ * @param {(name: string) => string} [opts.normalize] - Function to normalize variable names.
+ * @param {string} [opts.selector] - CSS selector for the root element.
+ * @param {boolean} [opts.silent] - Suppresses console warnings if set to `true`.
+ * @param {Console} [opts.logger] - Logger instance to use.
+ * @param {string} [opts.filter] - CSS selector filter.
+ * @param {MutationObserverInit} [opts.mutationObserveOptions] - Options for the mutation observer.
+ *
+ * @returns An object with two properties:
+ * - `proxy`: Proxy object containing the CSS variables and their values. Provides bound methods for live-getting and setting of the variables and values.
+ * - `isStopped`: Function that checks if Proxy has been revoked and observer disconnected.
+ * - `stop`: Function that, when invoked, disconnects the observer and revokes the proxy.
+ *
+ * @throws {Error} Throws an error if the function is not executed in a browser environment.
+ * @throws {TypeError} Throws a type error if the provided configuration is invalid.
+ *
+ * @example
+ * ```ts
+ * const cssProps = CSSGlobalProperties();
+ * cssProps.proxy['--my-var'] = 'blue';
+ * console.log(cssProps.proxy['--my-var']); // 'blue'
+ * cssProps.stop();
+ * ```
+ */
+export function CSSGlobalProperties<CSSProp extends string>(opts: CSSGlobalPropertiesOptions = {}) {
     if (typeof window === 'undefined')
         throw new Error('[CSSGlobalProperties] - This library only works in the browser environment')
 
@@ -64,11 +99,16 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
     })
 
     // cssVarsRecord : Contains (internally) the CSS variables and values.
-    const cssVarsRecord = {} as Record<CSSVarNames | `--${CSSVarNames}`, string>
+    const cssVarsRecord = {} as Record<CSSProp | `--${CSSProp}`, string>
 
     const stylesUpdatedEvent = new CustomEvent('stylesUpdated', { detail: cssVarsRecord })
 
     const normalizeVariableName = createNormalizer(globalConfigs)
+
+    const {
+        getPropertyValue,
+        setProperty,
+    } = useRootStyle(globalConfigs)
 
     /**
      *
@@ -155,19 +195,14 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
         // values, consulting the :root element inline style definitions,
         // and assigning those values to the variables, in cache
         keys(cssVarsRecord).forEach(key => {
-            const getPropertyValue = window
-                .getComputedStyle(document.documentElement, null)
-                .getPropertyValue(key).trim()
-
-            // cssVarsRecord.set(key, getPropertyValue);
-            cssVarsRecord[key] = getPropertyValue
+            cssVarsRecord[key] = getPropertyValue(key)
         })
 
         return true
     }
 
     // Initialize the observer. Set the target and the config
-    initObserver({
+    const observer = initObserver({
         options: opts.mutationObserveOptions,
         onUpdate: () => {
             updateVarsCache()
@@ -185,10 +220,8 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
      * variables and their values. Provides bound methods for live getting and
      * setting of the variables and values.
      *
-     * @type {Proxy}
-     *
      */
-    return new Proxy(cssVarsRecord, {
+    const proxy = Proxy.revocable(cssVarsRecord, {
         get(target, name) {
             // check if there is any new CSS declarations to be considered
             // before returning any
@@ -201,7 +234,8 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
             const normalizedName = normalizeVariableName(name)
 
             // set the variable value
-            document.documentElement.style.setProperty(normalizedName, String(value))
+            // document.documentElement.style.setProperty(normalizedName, String(value))
+            setProperty(normalizedName, String(value))
 
             // update the cache object
             return Reflect.set(target, name, value)
@@ -227,7 +261,8 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
                 const value = attr.value.toString()
 
                 // set the CSS variable value
-                document.documentElement.style.setProperty(normalizedName, value)
+                // document.documentElement.style.setProperty(normalizedName, value)
+                setProperty(normalizedName, value)
 
                 // update the cache
                 Reflect.set(target, normalizedName, value)
@@ -245,4 +280,28 @@ export function CSSGlobalProperties<CSSVarNames extends string>(
             return Reflect.getOwnPropertyDescriptor(target, normalizedName)
         },
     })
+
+    function isStopped() {
+        try {
+            // Trying to interact with the proxy
+            // eslint-disable-next-line no-unused-expressions
+            (proxy.proxy as any).foo
+            return false
+        }
+        catch (error) {
+            if (error instanceof TypeError && error.message.includes('illegal operation attempted on a revoked proxy'))
+                return true
+
+            throw error  // If it's another type of error, propagate it
+        }
+    }
+
+    return {
+        proxy: proxy.proxy,
+        isStopped,
+        stop: () => {
+            observer.disconnect()
+            proxy.revoke()
+        },
+    }
 }

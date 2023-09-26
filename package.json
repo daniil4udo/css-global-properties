@@ -33,7 +33,7 @@
         "build": "rimraf dist && tsup",
         "lint": "eslint . --color --fix --ignore-path .gitignore",
         "prepublishOnly": "pnpm typedoc && pnpm build",
-        "release": "bumpp --commit --tag --no-push && pnpm publish --access public",
+        "release": "bumpp --commit 'release: 🔖 v' --tag --no-push && pnpm publish --access public",
         "typedoc": "typedoc --readme .github/README.md --plugin typedoc-plugin-markdown ./lib/index.ts",
         "test": "vitest --ui",
         "test:coverage": "vitest run --coverage"

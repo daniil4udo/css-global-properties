@@ -7,15 +7,17 @@
 
 import type { CSSGlobalPropertiesOptions } from './types'
 
-import { defaultsDeep,  isPlainObject, queryElement, toLower } from '@democrance/utils'
+import { toLower } from '@democrance/utils/changeCase'
+import { defaultsDeep } from '@democrance/utils/defaultsDeep'
+import { queryElement } from '@democrance/utils/dom/queryElement'
+import { isPlainObject } from '@democrance/utils/isPlainObject'
 
 import { initObserver } from './initObserver'
-import { createNormalizer, cssRulesEntries, testCrossOrigin,  useRootStyle } from './styleHelpers'
+import { createNormalizer, cssRulesEntries, testCrossOrigin, useRootStyle } from './styleHelpers'
 
 function keys<T extends Record<PropertyKey, any>>(obj: T): Array<keyof T> {
     return Object.keys(obj) as Array<keyof T>
 }
-
 
 /**
  * Creates an object to interact with global CSS properties.
@@ -293,7 +295,7 @@ export function CSSGlobalProperties<CSSProp extends string>(opts: CSSGlobalPrope
             if (error instanceof TypeError && error.message.includes('illegal operation attempted on a revoked proxy'))
                 return true
 
-            throw error  // If it's another type of error, propagate it
+            throw error // If it's another type of error, propagate it
         }
     }
 

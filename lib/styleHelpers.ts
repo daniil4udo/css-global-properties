@@ -1,7 +1,7 @@
 import type { CSSGlobalPropertiesOptions, CSSRuleEntries } from './types'
 import type { Memoized } from 'micro-memoize'
 
-import { memoize } from '@democrance/utils'
+import { memoize } from '@democrance/utils/memoize'
 
 /**
  * Creates and returns an object containing a dynamically created <style> tag,

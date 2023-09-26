@@ -1,6 +1,6 @@
 import type { InitObserver } from './types'
 
-import { defaultsDeep } from '@democrance/utils'
+import { defaultsDeep } from '@democrance/utils/defaultsDeep'
 
 import { isAllowedTagName } from './styleHelpers'
 

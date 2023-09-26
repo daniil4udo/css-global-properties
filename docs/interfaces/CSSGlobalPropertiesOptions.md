@@ -33,7 +33,7 @@ true
 
 #### Defined in
 
-[types.ts:31](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L31)
+[types.ts:31](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L31)
 
 ___
 
@@ -43,7 +43,7 @@ ___
 
 #### Defined in
 
-[types.ts:28](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L28)
+[types.ts:28](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L28)
 
 ___
 
@@ -53,7 +53,7 @@ ___
 
 #### Defined in
 
-[types.ts:27](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L27)
+[types.ts:27](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L27)
 
 ___
 
@@ -71,7 +71,7 @@ ID Attribute tag.
 
 #### Defined in
 
-[types.ts:59](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L59)
+[types.ts:59](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L59)
 
 ___
 
@@ -89,7 +89,7 @@ Attribute to ignore.
 
 #### Defined in
 
-[types.ts:53](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L53)
+[types.ts:53](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L53)
 
 ___
 
@@ -105,7 +105,7 @@ console
 
 #### Defined in
 
-[types.ts:44](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L44)
+[types.ts:44](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L44)
 
 ___
 
@@ -117,7 +117,7 @@ MutationObserver options
 
 #### Defined in
 
-[types.ts:41](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L41)
+[types.ts:41](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L41)
 
 ___
 
@@ -147,7 +147,7 @@ null
 
 #### Defined in
 
-[types.ts:36](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L36)
+[types.ts:36](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L36)
 
 ___
 
@@ -165,7 +165,7 @@ CSS Selector.
 
 #### Defined in
 
-[types.ts:65](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L65)
+[types.ts:65](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L65)
 
 ___
 
@@ -181,4 +181,4 @@ true
 
 #### Defined in
 
-[types.ts:47](https://github.com/daniil4udo/css-global-properties/blob/19c24c7/lib/types.ts#L47)
+[types.ts:47](https://github.com/daniil4udo/css-global-properties/blob/e5ffbc3/lib/types.ts#L47)

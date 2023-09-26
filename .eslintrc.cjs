@@ -7,6 +7,7 @@ module.exports = {
     rules: {
         // dmc
         '@typescript-eslint/semi': [ 'error', 'never' ],
+        '@stylistic/js/array-bracket-spacing': 0,
     },
     overrides: [
         {
